@@ -49,15 +49,23 @@ app.get('/map', (req, resp) => {
         lon: parseFloat(req.query.lon)
     }
 
-    //TODO 3/3: Add query parameters for Static Map
+    //TODO 3/3: Add query parameters for Static Map (use static map to get info)
     //Use the exact query parameter names as keys
     //Latitude and longitude from coord object above
     //API key is in keys.map
     const params = {
+        //goto Google Map API guide to look at structure
+        center: `${coord.lat},${coord.lon}`,
+        zoom: 15,
+        size: '400x400',
+        format: 'png',
+        marker: `color:orange|size:mid|label:A|${coord.lat},${coord.lon}`,
+        key: keys.map  //*need provide key
     }
 
     getMap({ qs: params, encoding: null})
         .then(result => {
+            console.info('>>> map result: ')
             resp.status(200);
             resp.type('image/png')
             resp.send(result);
@@ -76,7 +84,10 @@ app.get('/information', (req, resp) => {
     //Weather for city is in cityName variable
     //API key is in keys.weather
     const params = {
-    }
+        q: cityName,
+        units: 'metric', //look at guide
+        appid: keys.weather
+            }
 
     getWeather(params)
         .then(result => {
@@ -87,6 +98,9 @@ app.get('/information', (req, resp) => {
             //The 2 character country code is found in countryCode variable
             //API key is in keys.news
             const params = {
+                country: countryCode,  //
+                category: 'technology', //
+                apiKey: keys.news
             }
             return (Promise.all([ result, getNews(params) ]));
         })
