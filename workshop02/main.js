@@ -1,4 +1,5 @@
 const range = require('express-range')
+
 const compression = require('compression')
 
 const express = require('express')
@@ -19,24 +20,88 @@ const db = CitiesDB({
 
 const app = express();
 
+app.set('etag', false)
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Start of workshop
-
 // Mandatory workshop
+
 // TODO GET /api/states
+app.get('/api/states', 
+    (req, resp) => {
 
+        // Content-Type: appliction/json
+        resp.type('application/json')
 
-
+        db.findAllStates()
+            .then(result => {
+                // 200 OK
+                resp.status(200)
+                resp.json(result);
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
+    }
+);
 
 // TODO GET /api/state/:state
+app.get('/api/state/:state', 
+    (req, resp) => {
+        const stateAbbrev = req.params.state;
+        resp.type('application/json')
+        db.findAllStates()
+            .then(result => {
+                if (result.indexOf(stateAbbrev.toUpperCase()) < 0) {
+                    resp.status(400);
+                    resp.json({ error: `Not a valid state: '${stateAbbrev}'`})
+                    return;
+                }
+                return (db.findCitiesByState(stateAbbrev))
+            })
+            .then(result => {
+                resp.status(200)
+                resp.json(result.map(v => `/api/city/${v}`));
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
 
-
-
+    }
+);
 
 // TODO GET /api/city/:cityId
+app.get('/api/city/:cityId', 
+    (req, resp) => {
+        const cityAbbrev = req.params.city;
+        resp.type('application/json')
+        db.findCityById()
+            .then(result => {
+                if (result.indexOf(stateAbbrev.toUpperCase()) < 0) {
+                    resp.status(400);
+                    resp.json({ error: `Not a valid city: '${cityAbbrev}'`})
+                    return;
+                }
+                return (db.findCitiesByState(stateAbbrev))
+            })
+            .then(result => {
+                resp.status(200)
+                //resp.json(result.map(v => `/api/city/${v}`));
+            })
+            .catch(error => {
+                // 400 Bad Request
+                resp.status(400)
+                resp.json({ error: error })
+            });
 
+    }
+);
 
 
 // TODO POST /api/city
